@@ -366,12 +366,22 @@ function aiBalancedOrder(purpose) {
 function aiScore(ex, levelRank, purpose, preferType) {
   let s = 0;
 
-  // --- レベル適合（difficulty基準） ---
-  // 初心者は難易度2以下、中級は3以下を強く優先。超える分はマイナス
-  const maxDiff = levelRank === 1 ? 2 : levelRank === 2 ? 3 : 5;
+  // --- レベル適合（difficulty基準：レベルごとに“狙う難易度帯”を変える） ---
+  //   初心者: 易しい種目ほど高評価／難しい種目は減点
+  //   中級  : difficulty 2〜3を中心に
+  //   上級  : 難しい種目ほど高評価／易しすぎる種目は減点
   const diff = ex.difficulty || 3;
-  if (diff <= maxDiff) s += 3;
-  else s -= (diff - maxDiff) * 2;
+  if (levelRank === 1) {
+    if (diff <= 2) s += 4;
+    else s -= (diff - 2) * 3;                 // 難しすぎは強めに減点
+  } else if (levelRank === 2) {
+    if (diff === 2 || diff === 3) s += 4;     // 中級の中心帯
+    else if (diff === 1) s += 1;              // 易しすぎは弱め
+    else s -= (diff - 3) * 2;                 // 4〜5はやや減点
+  } else {
+    if (diff >= 3) s += 4;                    // 上級は難しい種目を優先
+    else s -= (3 - diff) * 2;                 // 易しすぎ（1〜2）は減点
+  }
 
   // --- 目的(goal)への適合 ---
   if (Array.isArray(ex.goal) && ex.goal.includes(purpose)) s += 3;
@@ -498,16 +508,16 @@ function generateAIMenu() {
   const levelRank = aiLevelRank[level];
   const count     = parseInt(aiGetRadio("aiCount") || "4");   // ← 選んだ種目数（2〜6）
 
-  // レベルでセット数を微調整
-  let sets = scheme.sets;
-  if (level === "初心者") sets -= 1;
-  if (level === "上級者") sets += 1;
-  if (sets < 2) sets = 2;
+  // 所要時間と種目数から、1種目あたりのセット数を決める。
+  //  1セット ≒ 2.5分 とみなし、選んだ時間に収まる範囲でセット数を出す。
+  //  → 時間を長くするほどセット数が増える（時間の変更が結果に反映される）
+  let sets = Math.floor(minutes / (count * 2.5));
+  if (level === "上級者") sets += 1;   // 上級はやや多め
+  if (sets < 2) sets = 2;              // 最低2セット
+  if (sets > 5) sets = 5;              // 多すぎない上限
 
-  // 所要時間に対してボリュームが多すぎたらセットを削る（1種目 ≒ sets×2.5分 で概算）
-  let tooLong = false;
-  while (count * sets * 2.5 > minutes && sets > 2) sets--;
-  if (count * sets * 2.5 > minutes) tooLong = true;
+  // 最低2セットでも時間が足りない場合はひとこと添える
+  const tooLong = (count * 2 * 2.5 > minutes);
 
   // 種目を選ぶ（(2)直近で鍛えた部位は後回し）
   const recentParts = aiRecentParts();
