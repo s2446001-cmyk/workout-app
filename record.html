@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>記録</title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0B0E15">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <style>
+    /* AI提案セクション専用の見た目（左寄せ・タグ・行レイアウト） */
+    .ai-card { text-align: left; }
+
+    .ai-group { margin-bottom: 10px; }
+
+    .ai-group-title {
+      font-weight: bold;
+      font-size: 17px;
+      margin: 18px 0 10px;
+    }
+
+    .ai-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 4px 0 4px;
+    }
+
+    .ai-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+    }
+    .ai-option input { width: auto; margin: 0; }
+
+    .ai-divider { border-top: 1px solid var(--line); margin: 16px 0; }
+
+    /* 提案結果 */
+    .ai-section-title { font-weight: bold; font-size: 17px; margin: 14px 0 8px; }
+
+    .ai-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .ai-tag {
+      background: var(--surface-2); border: 1px solid var(--line);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    /* 全てチェック/外すボタン（小さめ・横並び） */
+    .ai-check-controls { display: flex; gap: 10px; margin: 6px 0 4px; }
+    .ai-mini {
+      width: auto;
+      padding: 8px 14px;
+      font-size: 14px;
+      background: var(--surface-2); border: 1px solid var(--line);
+    }
+
+    /* チェック付きの提案行 */
+    .ai-pick-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .ai-pick-left { display: flex; align-items: center; gap: 10px; }
+    .ai-pick-row input { width: auto; margin: 0; }
+    .ai-ex-name { font-weight: bold; }
+    .ai-ex-hint { display: block; color: var(--accent); font-size: 12px; margin-top: 2px; }
+    .ai-ex-set { color: var(--muted); white-space: nowrap; }
+
+    /* 提案行の重さ入力（−/＋つき） */
+    .ai-pick-item { border-bottom: 1px solid var(--line); }
+    .ai-pick-item .ai-pick-row { border-bottom: none; padding-bottom: 4px; }
+    .ai-weight-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 0 12px 8px;
+    }
+    .ai-weight-label { color: var(--muted); font-size: 13px; margin-right: 2px; flex: 0 0 auto; }
+    .ai-weight-row input.ai-weight {
+      flex: 1 1 0; min-width: 0;
+      width: auto; margin: 0; padding: 8px; text-align: center;
+      font-size: 16px; font-variant-numeric: tabular-nums;
+    }
+    .ai-weight-row .ai-step {
+      width: 44px; flex: 0 0 auto; padding: 8px 0; font-size: 18px;
+      margin: 0; background: var(--surface-2); color: var(--text);
+      border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
+    }
+    .ai-weight-unit { color: var(--muted); font-size: 13px; flex: 0 0 auto; }
+
+    .ai-reason {
+      background: var(--surface-2); border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      margin: 16px 0;
+      line-height: 1.6;
+    }
+    .ai-reason-title { font-weight: bold; margin-bottom: 6px; }
+
+    .ai-add-msg { color: var(--accent); margin-top: 10px; }
+
+    /* 数値入力＋/−ステッパー */
+    .field-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin: 10px auto;
+    }
+    .field-row input {
+      width: auto;
+      flex: 1 1 0;
+      min-width: 0;
+      margin: 0;
+      text-align: center;
+    }
+    .step-btn {
+      width: 52px;
+      flex: 0 0 auto;
+      margin: 0;
+      padding: 12px 0;
+      font-size: 22px;
+      background: var(--surface-2); border: 1px solid var(--line);
+    }
+
+    /* サブ（控えめ）ボタン */
+    .sub-btn { background: var(--surface-2); border: 1px solid var(--line); }
+
+    /* 今日のメニューの各行のボタン */
+    .item-name { margin-bottom: 6px; }
+    .item-actions { display: flex; gap: 8px; justify-content: center; }
+    .item-btn {
+      width: auto;
+      margin: 0;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+    .item-btn.del { background: #555; }
+
+    /* 保存メニューのワンタップ読み込みボタン */
+    .routine-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: 80%;
+      margin: 8px auto;
+    }
+    .routine-load {
+      flex: 1;
+      margin: 0;
+      background: #2962ff;
+    }
+    .routine-del {
+      width: 50px;
+      flex: 0 0 auto;
+      margin: 0;
+      padding: 12px 0;
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+
+  
+
+  <h1>トレーニング記録</h1>
+
+  <!-- ============================================================= -->
+  <!--  AIメニュー提案（入力フォーム）                               -->
+  <!-- ============================================================= -->
+  <div class="card ai-card">
+
+    <h2>🤖 AIにメニューを提案してもらう</h2>
+
+    <div class="ai-group-title">🎯 目的</div>
+    <div class="ai-group">
+      <label class="ai-option"><input type="radio" name="aiPurpose" value="ダイエット">ダイエット</label>
+      <label class="ai-option"><input type="radio" name="aiPurpose" value="見た目改善" checked>見た目改善</label>
+      <label class="ai-option"><input type="radio" name="aiPurpose" value="筋力向上">筋力向上</label>
+      <label class="ai-option"><input type="radio" name="aiPurpose" value="健康維持">健康維持</label>
+    </div>
+
+    <div class="ai-divider"></div>
+
+    <div class="ai-group-title">📈 レベル</div>
+    <div class="ai-note">レベルは種目の選び方とセット数に反映されます（初心者ほど扱いやすい有名種目を優先）</div>
+    <div class="ai-group">
+      <label class="ai-option"><input type="radio" name="aiLevel" value="初心者" checked>初心者</label>
+      <label class="ai-option"><input type="radio" name="aiLevel" value="中級者">中級者</label>
+      <label class="ai-option"><input type="radio" name="aiLevel" value="上級者">上級者</label>
+    </div>
+
+    <div class="ai-divider"></div>
+
+    <div class="ai-group-title">🏋️ 部位（複数選択）</div>
+    <div class="ai-note">未選択のときは全身バランスで提案します</div>
+    <div class="ai-group">
+      <label class="ai-option"><input type="checkbox" name="aiPart" value="胸">胸</label>
+      <label class="ai-option"><input type="checkbox" name="aiPart" value="背中">背中</label>
+      <label class="ai-option"><input type="checkbox" name="aiPart" value="肩">肩</label>
+      <label class="ai-option"><input type="checkbox" name="aiPart" value="脚">脚</label>
+      <label class="ai-option"><input type="checkbox" name="aiPart" value="腕">腕</label>
+      <label class="ai-option"><input type="checkbox" name="aiPart" value="腹筋">腹筋</label>
+    </div>
+
+    <div class="ai-divider"></div>
+
+    <div class="ai-group-title">AIにおまかせ</div>
+    <div class="ai-group">
+      <label class="ai-option">
+        <input type="checkbox" id="aiOmakase">
+        部位を選ばず全身バランスで提案してもらう
+      </label>
+    </div>
+
+    <div class="ai-divider"></div>
+
+    <div class="ai-group-title">📋 種目数</div>
+    <div class="ai-group">
+      <label class="ai-option"><input type="radio" name="aiCount" value="2">2種目</label>
+      <label class="ai-option"><input type="radio" name="aiCount" value="3">3種目</label>
+      <label class="ai-option"><input type="radio" name="aiCount" value="4" checked>4種目</label>
+      <label class="ai-option"><input type="radio" name="aiCount" value="5">5種目</label>
+      <label class="ai-option"><input type="radio" name="aiCount" value="6">6種目</label>
+    </div>
+
+    <div class="ai-divider"></div>
+
+    <div class="ai-group-title">🕐 所要時間</div>
+    <div class="ai-group">
+      <label class="ai-option"><input type="radio" name="aiTime" value="15">15分</label>
+      <label class="ai-option"><input type="radio" name="aiTime" value="30" checked>30分</label>
+      <label class="ai-option"><input type="radio" name="aiTime" value="45">45分</label>
+      <label class="ai-option"><input type="radio" name="aiTime" value="60">60分</label>
+      <label class="ai-option"><input type="radio" name="aiTime" value="90">90分</label>
+    </div>
+
+    <button onclick="generateAIMenu()">AIにメニューを提案してもらう</button>
+
+  </div>
+
+  <!-- AI提案結果（チェックして今日のメニューに保存） -->
+  <div class="card ai-card" id="aiResult">
+    <p style="color:#888;">上のボタンを押すと、ここに提案メニューが表示されます。</p>
+  </div>
+
+  <!-- ============================================================= -->
+  <!--  ここから下は今までの記録機能                                 -->
+  <!-- ============================================================= -->
+
+  <!-- 前回・保存メニュー -->
+  <div class="card">
+
+    <h2>前回・保存メニュー</h2>
+
+    <button onclick="loadLastSession()">
+      ↻ 前回のトレを読み込む
+    </button>
+
+    <button class="sub-btn" onclick="saveLastSession()">
+      今日のトレを「前回」として記憶
+    </button>
+
+    <div class="ai-divider"></div>
+
+    <input id="menuName" placeholder="メニュー名（例：胸の日）">
+
+    <button onclick="saveRoutine()">
+      今日のメニューに名前を付けて保存
+    </button>
+
+    <div id="routineButtons"></div>
+
+  </div>
+
+  <!-- 記録 -->
+  <div class="card">
+
+    <label>種目</label>
+    <select id="exerciseSelect"></select>
+
+    <details class="ai-card" style="margin-top:6px;">
+      <summary>＋ リストに無い種目をここで追加</summary>
+
+      <input id="newExerciseName" placeholder="種目名">
+
+      <label>部位</label>
+      <select id="newExercisePart">
+        <option value="胸">胸</option>
+        <option value="背中">背中</option>
+        <option value="肩">肩</option>
+        <option value="脚">脚</option>
+        <option value="腕">腕</option>
+        <option value="腹筋">腹筋</option>
+        <option value="有酸素">有酸素</option>
+        <option value="その他">その他</option>
+      </select>
+
+      <input id="newExerciseMets" type="number" inputmode="decimal"
+        placeholder="METs（例：5）">
+
+      <button onclick="addExercise()">追加してリストに反映</button>
+    </details>
+
+    <div id="previousWeight"></div>
+
+    <label>重量(kg)</label>
+    <div class="field-row">
+      <button type="button" class="step-btn" onclick="stepField('exerciseWeight', -2.5, 0)">−</button>
+      <input id="exerciseWeight" type="number" inputmode="decimal">
+      <button type="button" class="step-btn" onclick="stepField('exerciseWeight', 2.5, 0)">＋</button>
+    </div>
+
+    <label>回数</label>
+    <div class="field-row">
+      <button type="button" class="step-btn" onclick="stepField('exerciseReps', -1, 0)">−</button>
+      <input id="exerciseReps" type="number" inputmode="numeric">
+      <button type="button" class="step-btn" onclick="stepField('exerciseReps', 1, 0)">＋</button>
+    </div>
+
+    <label>セット数</label>
+    <div class="field-row">
+      <button type="button" class="step-btn" onclick="stepField('exerciseSets', -1, 1)">−</button>
+      <input id="exerciseSets" type="number" inputmode="numeric" value="3">
+      <button type="button" class="step-btn" onclick="stepField('exerciseSets', 1, 1)">＋</button>
+    </div>
+
+    <button onclick="addWorkout()">
+      この内容で記録する
+    </button>
+
+    <div id="recordMsg" class="ai-add-msg"></div>
+
+  </div>
+
+  <!-- 今日のメニュー -->
+  <div class="card">
+
+    <h2>今日のメニュー</h2>
+
+    <ul id="menuList"></ul>
+
+    <button class="sub-btn" onclick="clearTodayMenu()">
+      今日のメニューをクリア
+    </button>
+
+  </div>
+
+  <script src="script.js"></script>
+  <script src="ai.js"></script>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.2 12 4.5l8 6.7V20a1 1 0 0 1-1 1h-4.5v-5.5h-5V21H5a1 1 0 0 1-1-1z"/></svg></span>ホーム</a>
+    <a href="timer.html"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V10M9.5 3h5"/></svg></span>タイマー</a>
+    <a href="record.html" class="active"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16.8 3.7l3.5 3.5L8 19.5l-4.5 1 1-4.5z"/></svg></span>記録</a>
+    <a href="exercise.html"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10v4M6.5 7.5v9M17.5 7.5v9M20.5 10v4M6.5 12h11"/></svg></span>種目</a>
+    <a href="calorie.html"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c.8 3-4.5 5.2-4.5 9a4.5 4.5 0 0 0 9 .2c0-1.9-.9-3.2-1.9-4.2-.2 1.3-.9 1.9-1.6 2.1.6-2.3-.2-5.1-1-7.1z"/></svg></span>カロリー</a>
+    <a href="graph.html"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 4v16h16"/><path d="M8 15.5l3.2-4 3 2.2 4.8-6.2"/></svg></span>グラフ</a>
+  </nav>
+
+</body>
+</html>

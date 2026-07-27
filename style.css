@@ -1,0 +1,291 @@
+/* =====================================================================
+   筋トレサポートアプリ UI
+   - ダーク基調 × 単色グリーンアクセント（控えめに使う）
+   - 本文は左揃え、数字はスコアボード風のコンデンス書体
+   - 画面下に固定タブナビ（SVGアイコン）
+   ===================================================================== */
+
+:root {
+  --bg:        #0F131B;
+  --surface:   #171C26;
+  --surface-2: #1F2530;
+  --line:      rgba(255,255,255,.07);
+  --text:      #E9EDF3;
+  --muted:     #98A2B3;
+  --accent:    #2CE080;
+  --accent-dim:#1FA35F;
+  --amber:     #F5B04D;      /* 連続記録・自己ベスト */
+  --danger:    #F87171;
+  --radius:    14px;
+  --num-font:  "Bebas Neue", "Oswald", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+               "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  text-align: left;
+  margin: 0;
+  padding: 20px 16px calc(86px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- 見出し --- */
+h1 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-align: center;
+  margin: 6px 0 18px;
+}
+h2 {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+/* --- カード --- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin: 14px auto;
+  max-width: 500px;
+}
+
+/* --- 入力・ボタン --- */
+label { display: block; margin: 10px 0 4px; font-size: 13px; color: var(--muted); }
+
+input, select, button {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+}
+input::placeholder { color: var(--muted); }
+input:focus-visible, select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent-dim);
+  outline-offset: 1px;
+}
+
+button {
+  background: var(--accent);
+  border: none;
+  color: #06281A;
+  font-weight: 700;
+  cursor: pointer;
+}
+button:active { opacity: .85; }
+button:disabled {
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: default;
+}
+
+/* サブ（控えめ）ボタン */
+.sub-btn, .step-btn, .item-btn, .ai-mini {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  font-weight: 600;
+}
+
+/* --- リスト --- */
+ul { padding-left: 0; margin: 8px 0; }
+li {
+  list-style: none;
+  margin: 8px 0;
+  padding: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+/* --- 下部タブナビ --- */
+.bottom-nav {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  background: rgba(17,21,30,.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+  padding: 6px 2px calc(6px + env(safe-area-inset-bottom));
+  z-index: 1000;
+}
+.bottom-nav a {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 4px 0;
+}
+.bottom-nav .nav-icon { display: block; height: 22px; }
+.bottom-nav .nav-icon svg { width: 22px; height: 22px; display: block; }
+.bottom-nav a.active { color: var(--accent); }
+
+/* --- 前回重量の表示 --- */
+#previousWeight { margin: 8px 0; color: var(--accent); font-size: 14px; }
+
+/* --- 数値入力＋/−ステッパー --- */
+.field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  margin: 8px 0;
+}
+.field-row input {
+  flex: 1 1 0;
+  min-width: 0;            /* フレックス内で縮めるように（＋がはみ出さない） */
+  width: auto; margin: 0; text-align: center;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.step-btn {
+  width: 48px; flex: 0 0 auto;
+  margin: 0; padding: 10px 0;
+  font-size: 20px;
+}
+
+/* --- 一覧の行内ボタン --- */
+.item-name { margin-bottom: 6px; font-weight: 600; }
+.item-actions { display: flex; gap: 8px; }
+.item-btn { width: auto; margin: 0; padding: 7px 14px; font-size: 13px; }
+.item-btn.del { background: transparent; border-color: rgba(248,113,113,.35); color: var(--danger); }
+
+/* --- 折りたたみ --- */
+summary {
+  cursor: pointer;
+  padding: 8px 0;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* --- プログレスバー --- */
+.progress-track {
+  background: var(--surface-2);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+  width: 100%;
+}
+.progress-fill {
+  background: var(--accent);
+  height: 100%;
+  border-radius: 999px;
+  transition: width .3s ease;
+}
+
+/* --- スコアボード風の数字（ホーム・タイマー） --- */
+.stat-label {
+  font-size: 11px;
+  letter-spacing: .14em;
+  color: var(--muted);
+  text-align: center;
+}
+.stat-num {
+  font-family: var(--num-font);
+  font-size: 64px;
+  line-height: 1;
+  color: var(--text);
+  text-align: center;
+  margin: 4px 0 12px;
+}
+.stat-row {
+  display: flex; align-items: baseline; justify-content: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.stat-num-md {
+  font-family: var(--num-font);
+  font-size: 40px; line-height: 1;
+  color: var(--text);
+}
+.stat-den { color: var(--muted); font-size: 15px; }
+.stat-sub { margin-top: 8px; color: var(--muted); font-size: 12px; text-align: center; }
+.stat-msg { margin-top: 10px; font-weight: 600; text-align: center; }
+.streak { margin-top: 8px; color: var(--muted); font-size: 13px; text-align: center; }
+.streak.on { color: var(--amber); font-weight: 600; }
+
+/* 今週の曜日ドット */
+.week-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 12px 0 2px;
+}
+.week-dot {
+  width: 40px;
+  padding: 7px 0 6px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.week-dot-day { font-size: 11px; color: var(--muted); }
+.week-dot-mark {
+  font-size: 13px;
+  height: 15px;
+  line-height: 15px;
+  font-weight: 700;
+  color: #06281A;
+}
+.week-dot.on { background: var(--accent); }
+.week-dot.on .week-dot-day { color: #06281A; }
+.week-dot.future { opacity: .4; }
+
+/* タイマーの数字 */
+#timer {
+  font-family: var(--num-font);
+  font-size: 72px;
+  line-height: 1;
+  letter-spacing: .03em;
+  margin: 10px 0;
+  text-align: center;
+}
+#setDisplay { font-weight: 700; color: var(--accent); text-align: center; }
+
+/* --- 通知メッセージ --- */
+#recordMsg, .ai-add-msg { color: var(--accent); font-weight: 600; }
+
+/* --- 補足テキスト --- */
+.note, p.note { color: var(--muted); font-size: 13px; }
+
+/* --- スマホ向け（狭い画面）最適化 --- */
+@media (max-width: 430px) {
+  body { padding: 16px 10px calc(84px + env(safe-area-inset-bottom)); }
+  .card { padding: 14px; margin: 12px auto; }
+  .step-btn { width: 44px; font-size: 18px; }
+  .field-row { gap: 6px; }
+  input, select, button { font-size: 16px; }   /* iOSで拡大されないよう16px以上 */
+  .bottom-nav a { font-size: 9px; }
+  .bottom-nav .nav-icon svg { width: 21px; height: 21px; }
+  .stat-num { font-size: 56px; }
+  #timer { font-size: 64px; }
+  .week-dot { width: 100%; }                    /* 曜日ドットを7等分で画面いっぱいに */
+  .week-dots { gap: 4px; }
+}
+
+/* --- アクセシビリティ --- */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
