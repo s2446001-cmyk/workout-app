@@ -474,7 +474,15 @@ function aiPickExercise(part, levelRank, used, purpose, preferType) {
   if (candidates.length === 0) {
     return pool[0] || builtin[0];         // 出し切ったら先頭で妥協
   }
-  return candidates[0].e;
+
+  // 最高スコアに近い「良い候補」の中からランダムに選ぶ。
+  //  → 押すたび／条件を変えるたびに種目が変わる（＝マンネリ防止）
+  //    それでも上位だけから選ぶので、レベルや目的には合ったまま。
+  const topScore = candidates[0].score;
+  let near = candidates.filter(c => c.score >= topScore - 3);  // 最高から3点以内
+  if (near.length < 3) near = candidates.slice(0, Math.min(3, candidates.length));
+  const chosen = near[Math.floor(Math.random() * near.length)];
+  return chosen.e;
 }
 
 
