@@ -79,6 +79,23 @@ input:focus-visible, select:focus-visible, button:focus-visible {
   outline-offset: 1px;
 }
 
+/* ラジオ（〇）・チェックボックス（□）は小さめの固定サイズに
+   （input全体の width:100% / padding が効いて膨らむのを打ち消す） */
+input[type="radio"],
+input[type="checkbox"] {
+  -webkit-appearance: auto;
+  appearance: auto;
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  vertical-align: middle;
+  accent-color: var(--accent);
+}
+
 button {
   background: var(--accent);
   border: none;
