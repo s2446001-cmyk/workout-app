@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>タイマー</title>
 
   <link rel="stylesheet" href="style.css">
@@ -23,13 +23,25 @@
   <div class="card">
 
     <label>セット数</label>
-    <input id="totalSets" type="number" value="3">
+    <div class="field-row">
+      <button type="button" class="step-btn" onclick="stepField('totalSets', -1, 1)">−</button>
+      <input id="totalSets" type="number" inputmode="numeric" value="3">
+      <button type="button" class="step-btn" onclick="stepField('totalSets', 1, 1)">＋</button>
+    </div>
 
     <label>セット間レスト（秒）</label>
-    <input id="setRest" type="number" value="60">
+    <div class="field-row">
+      <button type="button" class="step-btn" onclick="stepField('setRest', -15, 0)">−</button>
+      <input id="setRest" type="number" inputmode="numeric" value="60">
+      <button type="button" class="step-btn" onclick="stepField('setRest', 15, 0)">＋</button>
+    </div>
 
     <label>種目間レスト（秒）</label>
-    <input id="exerciseRest" type="number" value="120">
+    <div class="field-row">
+      <button type="button" class="step-btn" onclick="stepField('exerciseRest', -15, 0)">−</button>
+      <input id="exerciseRest" type="number" inputmode="numeric" value="120">
+      <button type="button" class="step-btn" onclick="stepField('exerciseRest', 15, 0)">＋</button>
+    </div>
 
     <button id="setRestBtn" onclick="startSetRest()">
       セット完了 → 休憩

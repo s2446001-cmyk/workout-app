@@ -22,6 +22,16 @@
 
 * { box-sizing: border-box; }
 
+/* スマホの操作感：タップ時の灰色ハイライトを消す・ボタン等の誤選択を防ぐ */
+button, a, .step-btn, .item-btn, .ai-mini, summary, label, .bottom-nav a {
+  -webkit-tap-highlight-color: transparent;
+}
+button, .step-btn, .item-btn, .ai-mini, .bottom-nav a, summary {
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;   /* ダブルタップ拡大の遅延をなくす */
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue",
                "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
@@ -31,6 +41,8 @@ body {
   margin: 0;
   padding: 20px 16px calc(86px + env(safe-area-inset-bottom));
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;         /* PWAで引っぱり更新の誤作動を防ぐ */
+  -webkit-overflow-scrolling: touch;      /* 慣性スクロール */
 }
 
 /* --- 見出し --- */
@@ -185,7 +197,7 @@ li {
 /* --- 一覧の行内ボタン --- */
 .item-name { margin-bottom: 6px; font-weight: 600; }
 .item-actions { display: flex; gap: 8px; }
-.item-btn { width: auto; margin: 0; padding: 7px 14px; font-size: 13px; }
+.item-btn { width: auto; margin: 0; padding: 10px 16px; min-height: 40px; font-size: 13px; }
 .item-btn.del { background: transparent; border-color: rgba(248,113,113,.35); color: var(--danger); }
 
 /* --- 折りたたみ --- */

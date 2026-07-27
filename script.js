@@ -1171,9 +1171,22 @@ function shortDate(dateStr) {
 
 // グラフページの全チャートを描画
 function drawCharts() {
+  applyChartTheme();
   drawWeightChart();
   drawVolumeChart();
   drawCalorieChart();
+}
+
+// グラフの文字・目盛りをダーク背景で読みやすい色にする
+function applyChartTheme() {
+  if (typeof Chart === "undefined") return;
+  Chart.defaults.color = "#E9EDF3";                       // 凡例・軸ラベルの文字
+  Chart.defaults.borderColor = "rgba(255,255,255,0.10)";  // グリッド線
+  Chart.defaults.font = Chart.defaults.font || {};
+  Chart.defaults.font.size = 13;
+  // スマホで縦に伸びすぎないよう、やや横長のアスペクトに
+  Chart.defaults.maintainAspectRatio = true;
+  Chart.defaults.aspectRatio = 1.9;
 }
 
 // ① 種目別の重量推移（折れ線）
