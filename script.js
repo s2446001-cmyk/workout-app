@@ -309,6 +309,31 @@ let exercises =
     { name: "ランニング", mets: 8, part: "有酸素" }
   ];
 
+// AIの種目データベース（ai.js）にある全種目を、種目管理に取り込む。
+//  ・初回のみ実行（フラグで管理）。以降は自分で追加・削除した内容を尊重する。
+//  ・すでに同じ名前がある種目は追加しない（重複防止）。
+function seedExercisesFromAI() {
+  if (localStorage.getItem("aiSeedApplied") === "1") return;   // 取り込み済みなら何もしない
+  if (typeof aiExerciseDB === "undefined") return;             // ai.js未読み込みのページでは何もしない
+
+  const existing = new Set(exercises.map(e => e.name));
+  let added = 0;
+
+  for (const part in aiExerciseDB) {
+    aiExerciseDB[part].forEach(e => {
+      if (!existing.has(e.name)) {
+        exercises.push({ name: e.name, mets: e.mets, part });
+        existing.add(e.name);
+        added++;
+      }
+    });
+  }
+
+  localStorage.setItem("exercises", JSON.stringify(exercises));
+  localStorage.setItem("aiSeedApplied", "1");
+  return added;
+}
+
 function updateExerciseSelect() {
 
   const select =
@@ -1441,6 +1466,8 @@ function initGraphPage() {
 window.onload = () => {
 
   checkNewDay();
+
+  seedExercisesFromAI();   // AIの全種目を種目管理に取り込む（初回のみ）
 
   updateExerciseSelect();
 
