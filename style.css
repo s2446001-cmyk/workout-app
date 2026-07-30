@@ -176,15 +176,19 @@ li {
 }
 .bottom-nav a {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   font-size: 10px;
+  line-height: 1.1;
+  white-space: nowrap;      /* ラベルを1行に固定（折り返しで窮屈にならない） */
   color: var(--muted);
   text-decoration: none;
   padding: 4px 0;
 }
+.bottom-nav a span:not(.nav-icon) { transform: scale(.95); }
 .bottom-nav .nav-icon { display: block; height: 22px; }
 .bottom-nav .nav-icon svg { width: 22px; height: 22px; display: block; }
 .bottom-nav a.active { color: var(--accent); }
@@ -432,8 +436,10 @@ input[type="range"] {
   .step-btn { width: 44px; font-size: 18px; }
   .field-row { gap: 6px; }
   input, select, button { font-size: 16px; }   /* iOSで拡大されないよう16px以上 */
-  .bottom-nav a { font-size: 9px; }
-  .bottom-nav .nav-icon svg { width: 21px; height: 21px; }
+  .bottom-nav { padding: 5px 0 calc(5px + env(safe-area-inset-bottom)); }
+  .bottom-nav a { font-size: 9px; gap: 1px; padding: 3px 0; }
+  .bottom-nav .nav-icon { height: 20px; }
+  .bottom-nav .nav-icon svg { width: 20px; height: 20px; }
   .stat-num { font-size: 56px; }
   #timer { font-size: 64px; }
   .week-dot { width: 100%; }                    /* 曜日ドットを7等分で画面いっぱいに */
