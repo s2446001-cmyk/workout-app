@@ -346,6 +346,36 @@ summary {
 /* --- 補足テキスト --- */
 .note, p.note { color: var(--muted); font-size: 13px; }
 
+/* ホーム：上部の設定歯車＋設定ボタン */
+.home-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.home-top h1 { margin: 6px 0 18px; }
+.settings-link {
+  flex: 0 0 auto;
+  color: var(--muted);
+  display: inline-flex;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.settings-link svg { width: 22px; height: 22px; display: block; }
+.settings-btn {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 600;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+
 /* --- 部位フィルタのタブ（横スクロール） --- */
 .filter-tabs {
   display: flex;
