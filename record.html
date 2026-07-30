@@ -13,415 +13,276 @@
   <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-
-  <style>
-    /* AI提案セクション専用の見た目（左寄せ・タグ・行レイアウト） */
-    .ai-card { text-align: left; }
-
-    .ai-group { margin-bottom: 10px; }
-
-    .ai-group-title {
-      font-weight: bold;
-      font-size: 17px;
-      margin: 18px 0 10px;
-    }
-
-    .ai-note {
-      color: var(--muted);
-      font-size: 13px;
-      margin: 4px 0 4px;
-    }
-
-    .ai-option {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 0;
-    }
-    .ai-option input { width: auto; margin: 0; }
-
-    .ai-divider { border-top: 1px solid var(--line); margin: 16px 0; }
-
-    /* 提案結果 */
-    .ai-section-title { font-weight: bold; font-size: 17px; margin: 14px 0 8px; }
-
-    .ai-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-    .ai-tag {
-      background: var(--surface-2); border: 1px solid var(--line);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-    }
-
-    /* 全てチェック/外すボタン（小さめ・横並び） */
-    .ai-check-controls { display: flex; gap: 10px; margin: 6px 0 4px; }
-    .ai-mini {
-      width: auto;
-      padding: 8px 14px;
-      font-size: 14px;
-      background: var(--surface-2); border: 1px solid var(--line);
-    }
-
-    /* チェック付きの提案行 */
-    .ai-pick-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--line);
-      cursor: pointer;
-    }
-    .ai-pick-left { display: flex; align-items: center; gap: 10px; }
-    .ai-pick-row input { width: auto; margin: 0; }
-    .ai-ex-name { font-weight: bold; }
-    .ai-ex-hint { display: block; color: var(--accent); font-size: 12px; margin-top: 2px; }
-    .ai-ex-set { color: var(--muted); white-space: nowrap; }
-
-    /* 提案行の重さ入力（−/＋つき） */
-    .ai-pick-item { border-bottom: 1px solid var(--line); }
-    .ai-pick-item .ai-pick-row { border-bottom: none; padding-bottom: 4px; }
-    .ai-weight-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0 0 12px 8px;
-    }
-    .ai-weight-label { color: var(--muted); font-size: 13px; margin-right: 2px; flex: 0 0 auto; }
-    .ai-weight-row input.ai-weight {
-      flex: 1 1 0; min-width: 0;
-      width: auto; margin: 0; padding: 8px; text-align: center;
-      font-size: 16px; font-variant-numeric: tabular-nums;
-    }
-    .ai-weight-row .ai-step {
-      width: 44px; flex: 0 0 auto; padding: 8px 0; font-size: 18px;
-      margin: 0; background: var(--surface-2); color: var(--text);
-      border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
-    }
-    .ai-weight-unit { color: var(--muted); font-size: 13px; flex: 0 0 auto; }
-
-    /* 今日のメニュー：種目ごとにまとめて表示 */
-    #menuList { padding-left: 0; }
-    .menu-ex {
-      list-style: none;
-      background: var(--surface-2);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px 12px 10px;
-      margin: 10px 0;
-    }
-    .menu-ex-head {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 8px; margin-bottom: 8px;
-    }
-    .menu-ex-name { font-weight: 700; font-size: 16px; }
-    .set-add-btn {
-      width: auto; margin: 0; flex: 0 0 auto;
-      padding: 8px 12px; font-size: 13px;
-      background: var(--surface); color: var(--accent);
-      border: 1px solid var(--accent-dim); border-radius: 8px;
-    }
-    .set-row {
-      display: flex; align-items: center; gap: 6px;
-      padding: 5px 0;
-    }
-    .set-no { color: var(--muted); font-size: 13px; flex: 0 0 auto; width: 66px; }
-    .set-inp {
-      flex: 1 1 0; min-width: 0; width: auto; margin: 0;
-      padding: 8px; text-align: center; font-size: 16px;
-      font-variant-numeric: tabular-nums;
-    }
-    .set-unit { color: var(--muted); font-size: 13px; flex: 0 0 auto; }
-    .set-del {
-      width: 36px; flex: 0 0 auto; margin: 0; padding: 8px 0;
-      background: transparent; color: var(--danger);
-      border: 1px solid rgba(248,113,113,.35); border-radius: 8px;
-      font-size: 16px; line-height: 1;
-    }
-    .menu-ex-del {
-      width: 100%; margin: 8px 0 0; padding: 8px;
-      background: transparent; color: var(--muted);
-      border: 1px dashed var(--line); border-radius: 8px; font-size: 13px;
-    }
-
-    .ai-reason {
-      background: var(--surface-2); border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 14px;
-      margin: 16px 0;
-      line-height: 1.6;
-    }
-    .ai-reason-title { font-weight: bold; margin-bottom: 6px; }
-
-    .ai-add-msg { color: var(--accent); margin-top: 10px; }
-
-    /* 数値入力＋/−ステッパー */
-    .field-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      margin: 10px auto;
-    }
-    .field-row input {
-      width: auto;
-      flex: 1 1 0;
-      min-width: 0;
-      margin: 0;
-      text-align: center;
-    }
-    .step-btn {
-      width: 52px;
-      flex: 0 0 auto;
-      margin: 0;
-      padding: 12px 0;
-      font-size: 22px;
-      background: var(--surface-2); border: 1px solid var(--line);
-    }
-
-    /* サブ（控えめ）ボタン */
-    .sub-btn { background: var(--surface-2); border: 1px solid var(--line); }
-
-    /* 今日のメニューの各行のボタン */
-    .item-name { margin-bottom: 6px; }
-    .item-actions { display: flex; gap: 8px; justify-content: center; }
-    .item-btn {
-      width: auto;
-      margin: 0;
-      padding: 8px 16px;
-      font-size: 13px;
-    }
-    .item-btn.del { background: #555; }
-
-    /* 保存メニューのワンタップ読み込みボタン */
-    .routine-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      width: 80%;
-      margin: 8px auto;
-    }
-    .routine-load {
-      flex: 1;
-      margin: 0;
-      background: #2962ff;
-    }
-    .routine-del {
-      width: 50px;
-      flex: 0 0 auto;
-      margin: 0;
-      padding: 12px 0;
-      background: #555;
-    }
-  </style>
 </head>
 <body>
 
-  
-
-  <h1>トレーニング記録</h1>
-
   <!-- ============================================================= -->
-  <!--  AIメニュー提案（入力フォーム）                               -->
+  <!--  ページ内タブ（3つのパネルを切り替える）                      -->
   <!-- ============================================================= -->
-  <div class="card ai-card">
-
-    <h2>🤖 AIにメニューを提案してもらう</h2>
-
-    <div class="ai-group-title">🎯 目的</div>
-    <div class="ai-group">
-      <label class="ai-option"><input type="radio" name="aiPurpose" value="ダイエット">ダイエット</label>
-      <label class="ai-option"><input type="radio" name="aiPurpose" value="見た目改善" checked>見た目改善</label>
-      <label class="ai-option"><input type="radio" name="aiPurpose" value="筋力向上">筋力向上</label>
-      <label class="ai-option"><input type="radio" name="aiPurpose" value="健康維持">健康維持</label>
-    </div>
-
-    <div class="ai-divider"></div>
-
-    <div class="ai-group-title">📈 レベル</div>
-    <div class="ai-note">レベルは種目の選び方とセット数に反映されます（初心者ほど扱いやすい有名種目を優先）</div>
-    <div class="ai-group">
-      <label class="ai-option"><input type="radio" name="aiLevel" value="初心者" checked>初心者</label>
-      <label class="ai-option"><input type="radio" name="aiLevel" value="中級者">中級者</label>
-      <label class="ai-option"><input type="radio" name="aiLevel" value="上級者">上級者</label>
-    </div>
-
-    <div class="ai-divider"></div>
-
-    <div class="ai-group-title">🏋️ 部位（複数選択）</div>
-    <div class="ai-note">未選択のときは全身バランスで提案します</div>
-    <div class="ai-group">
-      <label class="ai-option"><input type="checkbox" name="aiPart" value="胸">胸</label>
-      <label class="ai-option"><input type="checkbox" name="aiPart" value="背中">背中</label>
-      <label class="ai-option"><input type="checkbox" name="aiPart" value="肩">肩</label>
-      <label class="ai-option"><input type="checkbox" name="aiPart" value="脚">脚</label>
-      <label class="ai-option"><input type="checkbox" name="aiPart" value="腕">腕</label>
-      <label class="ai-option"><input type="checkbox" name="aiPart" value="腹筋">腹筋</label>
-    </div>
-
-    <div class="ai-divider"></div>
-
-    <div class="ai-group-title">AIにおまかせ</div>
-    <div class="ai-group">
-      <label class="ai-option">
-        <input type="checkbox" id="aiOmakase">
-        部位を選ばず全身バランスで提案してもらう
-      </label>
-    </div>
-
-    <div class="ai-divider"></div>
-
-    <div class="ai-group-title">📋 種目数</div>
-    <div class="ai-group">
-      <label class="ai-option"><input type="radio" name="aiCount" value="2">2種目</label>
-      <label class="ai-option"><input type="radio" name="aiCount" value="3">3種目</label>
-      <label class="ai-option"><input type="radio" name="aiCount" value="4" checked>4種目</label>
-      <label class="ai-option"><input type="radio" name="aiCount" value="5">5種目</label>
-      <label class="ai-option"><input type="radio" name="aiCount" value="6">6種目</label>
-    </div>
-
-    <div class="ai-divider"></div>
-
-    <div class="ai-group-title">🕐 所要時間</div>
-    <div class="ai-group">
-      <label class="ai-option"><input type="radio" name="aiTime" value="15">15分</label>
-      <label class="ai-option"><input type="radio" name="aiTime" value="30" checked>30分</label>
-      <label class="ai-option"><input type="radio" name="aiTime" value="45">45分</label>
-      <label class="ai-option"><input type="radio" name="aiTime" value="60">60分</label>
-      <label class="ai-option"><input type="radio" name="aiTime" value="90">90分</label>
-    </div>
-
-    <button onclick="generateAIMenu()">AIにメニューを提案してもらう</button>
-
-  </div>
-
-  <!-- AI提案結果（チェックして今日のメニューに保存） -->
-  <div class="card ai-card" id="aiResult">
-    <p style="color:#888;">上のボタンを押すと、ここに提案メニューが表示されます。</p>
+  <div class="rec-tabs">
+    <button type="button" class="rec-tab active" data-panel="panelMenu" onclick="switchRecPanel(this)">
+      今日のメニュー<span class="rec-badge" id="recMenuBadge"></span>
+    </button>
+    <button type="button" class="rec-tab" data-panel="panelInput" onclick="switchRecPanel(this)">
+      記録する
+    </button>
+    <button type="button" class="rec-tab" data-panel="panelAI" onclick="switchRecPanel(this)">
+      AI提案
+    </button>
   </div>
 
   <!-- ============================================================= -->
-  <!--  ここから下は今までの記録機能                                 -->
+  <!--  パネル1：今日のメニュー                                      -->
   <!-- ============================================================= -->
+  <section class="rec-panel active" id="panelMenu">
 
-  <!-- 前回・保存メニュー -->
-  <div class="card">
+    <div class="card">
+      <h2>今日のメニュー</h2>
 
-    <details>
-      <summary>前回のトレ・保存メニュー</summary>
+      <ul id="menuList"></ul>
 
-      <button onclick="loadLastSession()">
-        ↻ 前回のトレを読み込む
+      <button class="sub-btn" onclick="clearTodayMenu()">
+        今日のメニューをクリア
+      </button>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>前回のトレ・保存メニュー</summary>
+
+        <button onclick="loadLastSession()">
+          ↻ 前回のトレを読み込む
+        </button>
+
+        <button class="sub-btn" onclick="saveLastSession()">
+          今日のトレを「前回」として記憶
+        </button>
+
+        <div class="ai-divider"></div>
+
+        <input id="menuName" placeholder="メニュー名（例：胸の日）">
+
+        <button onclick="saveRoutine()">
+          今日のメニューに名前を付けて保存
+        </button>
+
+        <div id="routineButtons"></div>
+      </details>
+    </div>
+
+  </section>
+
+  <!-- ============================================================= -->
+  <!--  パネル2：記録する                                            -->
+  <!-- ============================================================= -->
+  <section class="rec-panel" id="panelInput">
+
+    <div class="card">
+
+      <label>種目</label>
+
+      <input id="recSearch" type="search" placeholder="種目名で検索" oninput="updateExerciseSelect()">
+
+      <div id="recPartTabs" class="filter-tabs">
+        <button type="button" class="filter-tab active" data-part="all" onclick="setRecPart(this)">すべて</button>
+        <button type="button" class="filter-tab" data-part="胸" onclick="setRecPart(this)">胸</button>
+        <button type="button" class="filter-tab" data-part="背中" onclick="setRecPart(this)">背中</button>
+        <button type="button" class="filter-tab" data-part="肩" onclick="setRecPart(this)">肩</button>
+        <button type="button" class="filter-tab" data-part="脚" onclick="setRecPart(this)">脚</button>
+        <button type="button" class="filter-tab" data-part="腕" onclick="setRecPart(this)">腕</button>
+        <button type="button" class="filter-tab" data-part="腹筋" onclick="setRecPart(this)">腹筋</button>
+        <button type="button" class="filter-tab" data-part="有酸素" onclick="setRecPart(this)">有酸素</button>
+        <button type="button" class="filter-tab" data-part="その他" onclick="setRecPart(this)">その他</button>
+      </div>
+
+      <select id="exerciseSelect"></select>
+
+      <div id="previousWeight"></div>
+
+      <label>重量(kg)</label>
+      <div class="field-row">
+        <button type="button" class="step-btn" onclick="stepField('exerciseWeight', -2.5, 0)">−</button>
+        <input id="exerciseWeight" type="number" inputmode="decimal">
+        <button type="button" class="step-btn" onclick="stepField('exerciseWeight', 2.5, 0)">＋</button>
+      </div>
+
+      <label>回数</label>
+      <div class="field-row">
+        <button type="button" class="step-btn" onclick="stepField('exerciseReps', -1, 0)">−</button>
+        <input id="exerciseReps" type="number" inputmode="numeric">
+        <button type="button" class="step-btn" onclick="stepField('exerciseReps', 1, 0)">＋</button>
+      </div>
+
+      <label>セット数</label>
+      <div class="field-row">
+        <button type="button" class="step-btn" onclick="stepField('exerciseSets', -1, 1)">−</button>
+        <input id="exerciseSets" type="number" inputmode="numeric" value="3">
+        <button type="button" class="step-btn" onclick="stepField('exerciseSets', 1, 1)">＋</button>
+      </div>
+
+      <button onclick="addWorkout()">
+        この内容で記録する
       </button>
 
-      <button class="sub-btn" onclick="saveLastSession()">
-        今日のトレを「前回」として記憶
-      </button>
+      <div id="recordMsg" class="ai-add-msg"></div>
 
       <div class="ai-divider"></div>
 
-      <input id="menuName" placeholder="メニュー名（例：胸の日）">
+      <details class="ai-card">
+        <summary>＋ リストに無い種目をここで追加</summary>
 
-      <button onclick="saveRoutine()">
-        今日のメニューに名前を付けて保存
-      </button>
+        <input id="newExerciseName" placeholder="種目名">
 
-      <div id="routineButtons"></div>
-    </details>
+        <label>部位</label>
+        <select id="newExercisePart">
+          <option value="胸">胸</option>
+          <option value="背中">背中</option>
+          <option value="肩">肩</option>
+          <option value="脚">脚</option>
+          <option value="腕">腕</option>
+          <option value="腹筋">腹筋</option>
+          <option value="有酸素">有酸素</option>
+          <option value="その他">その他</option>
+        </select>
 
-  </div>
+        <input id="newExerciseMets" type="number" inputmode="decimal"
+          placeholder="METs（例：5）">
 
-  <!-- 記録 -->
-  <div class="card">
+        <button onclick="addExercise()">追加してリストに反映</button>
+      </details>
 
-    <label>種目</label>
-
-    <input id="recSearch" type="search" placeholder="種目名で検索" oninput="updateExerciseSelect()">
-
-    <div id="recPartTabs" class="filter-tabs">
-      <button type="button" class="filter-tab active" data-part="all" onclick="setRecPart(this)">すべて</button>
-      <button type="button" class="filter-tab" data-part="胸" onclick="setRecPart(this)">胸</button>
-      <button type="button" class="filter-tab" data-part="背中" onclick="setRecPart(this)">背中</button>
-      <button type="button" class="filter-tab" data-part="肩" onclick="setRecPart(this)">肩</button>
-      <button type="button" class="filter-tab" data-part="脚" onclick="setRecPart(this)">脚</button>
-      <button type="button" class="filter-tab" data-part="腕" onclick="setRecPart(this)">腕</button>
-      <button type="button" class="filter-tab" data-part="腹筋" onclick="setRecPart(this)">腹筋</button>
-      <button type="button" class="filter-tab" data-part="有酸素" onclick="setRecPart(this)">有酸素</button>
-      <button type="button" class="filter-tab" data-part="その他" onclick="setRecPart(this)">その他</button>
     </div>
 
-    <select id="exerciseSelect"></select>
+  </section>
 
-    <details class="ai-card" style="margin-top:6px;">
-      <summary>＋ リストに無い種目をここで追加</summary>
+  <!-- ============================================================= -->
+  <!--  パネル3：AIメニュー提案                                      -->
+  <!-- ============================================================= -->
+  <section class="rec-panel" id="panelAI">
 
-      <input id="newExerciseName" placeholder="種目名">
+    <div class="card ai-card">
 
-      <label>部位</label>
-      <select id="newExercisePart">
-        <option value="胸">胸</option>
-        <option value="背中">背中</option>
-        <option value="肩">肩</option>
-        <option value="脚">脚</option>
-        <option value="腕">腕</option>
-        <option value="腹筋">腹筋</option>
-        <option value="有酸素">有酸素</option>
-        <option value="その他">その他</option>
-      </select>
+      <h2>🤖 AIにメニューを提案してもらう</h2>
 
-      <input id="newExerciseMets" type="number" inputmode="decimal"
-        placeholder="METs（例：5）">
+      <div class="ai-group-title">🎯 目的</div>
+      <div class="chip-row">
+        <label class="chip"><input type="radio" name="aiPurpose" value="ダイエット"><span>ダイエット</span></label>
+        <label class="chip"><input type="radio" name="aiPurpose" value="見た目改善" checked><span>見た目改善</span></label>
+        <label class="chip"><input type="radio" name="aiPurpose" value="筋力向上"><span>筋力向上</span></label>
+        <label class="chip"><input type="radio" name="aiPurpose" value="健康維持"><span>健康維持</span></label>
+      </div>
 
-      <button onclick="addExercise()">追加してリストに反映</button>
-    </details>
+      <div class="ai-group-title">📈 レベル</div>
+      <div class="ai-note">種目の選び方とセット数に反映されます（初心者ほど扱いやすい種目を優先）</div>
+      <div class="chip-row">
+        <label class="chip"><input type="radio" name="aiLevel" value="初心者" checked><span>初心者</span></label>
+        <label class="chip"><input type="radio" name="aiLevel" value="中級者"><span>中級者</span></label>
+        <label class="chip"><input type="radio" name="aiLevel" value="上級者"><span>上級者</span></label>
+      </div>
 
-    <div id="previousWeight"></div>
+      <div class="ai-group-title">🏋️ 部位（複数選択）</div>
+      <div class="ai-note">未選択のときは全身バランスで提案します</div>
+      <div class="chip-row">
+        <label class="chip"><input type="checkbox" name="aiPart" value="胸"><span>胸</span></label>
+        <label class="chip"><input type="checkbox" name="aiPart" value="背中"><span>背中</span></label>
+        <label class="chip"><input type="checkbox" name="aiPart" value="肩"><span>肩</span></label>
+        <label class="chip"><input type="checkbox" name="aiPart" value="脚"><span>脚</span></label>
+        <label class="chip"><input type="checkbox" name="aiPart" value="腕"><span>腕</span></label>
+        <label class="chip"><input type="checkbox" name="aiPart" value="腹筋"><span>腹筋</span></label>
+      </div>
 
-    <label>重量(kg)</label>
-    <div class="field-row">
-      <button type="button" class="step-btn" onclick="stepField('exerciseWeight', -2.5, 0)">−</button>
-      <input id="exerciseWeight" type="number" inputmode="decimal">
-      <button type="button" class="step-btn" onclick="stepField('exerciseWeight', 2.5, 0)">＋</button>
+      <div class="ai-group-title">📋 種目数</div>
+      <div class="chip-row">
+        <label class="chip"><input type="radio" name="aiCount" value="2"><span>2</span></label>
+        <label class="chip"><input type="radio" name="aiCount" value="3"><span>3</span></label>
+        <label class="chip"><input type="radio" name="aiCount" value="4" checked><span>4</span></label>
+        <label class="chip"><input type="radio" name="aiCount" value="5"><span>5</span></label>
+        <label class="chip"><input type="radio" name="aiCount" value="6"><span>6</span></label>
+      </div>
+
+      <div class="ai-group-title">🕐 所要時間（分）</div>
+      <div class="chip-row">
+        <label class="chip"><input type="radio" name="aiTime" value="15"><span>15</span></label>
+        <label class="chip"><input type="radio" name="aiTime" value="30" checked><span>30</span></label>
+        <label class="chip"><input type="radio" name="aiTime" value="45"><span>45</span></label>
+        <label class="chip"><input type="radio" name="aiTime" value="60"><span>60</span></label>
+        <label class="chip"><input type="radio" name="aiTime" value="90"><span>90</span></label>
+      </div>
+
+      <div class="ai-divider"></div>
+
+      <label class="ai-option">
+        <input type="checkbox" id="aiOmakase">
+        AIにおまかせ（部位を選ばず全身バランスで提案）
+      </label>
+
+      <button onclick="generateAIMenu()">AIにメニューを提案してもらう</button>
+
     </div>
 
-    <label>回数</label>
-    <div class="field-row">
-      <button type="button" class="step-btn" onclick="stepField('exerciseReps', -1, 0)">−</button>
-      <input id="exerciseReps" type="number" inputmode="numeric">
-      <button type="button" class="step-btn" onclick="stepField('exerciseReps', 1, 0)">＋</button>
+    <!-- AI提案結果（チェックして今日のメニューに保存） -->
+    <div class="card ai-card" id="aiResult">
+      <p class="ai-note">上のボタンを押すと、ここに提案メニューが表示されます。</p>
     </div>
 
-    <label>セット数</label>
-    <div class="field-row">
-      <button type="button" class="step-btn" onclick="stepField('exerciseSets', -1, 1)">−</button>
-      <input id="exerciseSets" type="number" inputmode="numeric" value="3">
-      <button type="button" class="step-btn" onclick="stepField('exerciseSets', 1, 1)">＋</button>
-    </div>
-
-    <button onclick="addWorkout()">
-      この内容で記録する
-    </button>
-
-    <div id="recordMsg" class="ai-add-msg"></div>
-
-  </div>
-
-  <!-- 今日のメニュー -->
-  <div class="card">
-
-    <h2>今日のメニュー</h2>
-
-    <ul id="menuList"></ul>
-
-    <button class="sub-btn" onclick="clearTodayMenu()">
-      今日のメニューをクリア
-    </button>
-
-  </div>
+  </section>
 
   <script src="script.js"></script>
   <script src="ai.js"></script>
+
+  <script>
+    // ===== ページ内タブの切り替え =====
+    function switchRecPanel(btn) {
+
+      const id = btn.dataset.panel;
+
+      document.querySelectorAll(".rec-panel").forEach(p => {
+        p.classList.toggle("active", p.id === id);
+      });
+
+      document.querySelectorAll(".rec-tab").forEach(b => {
+        b.classList.toggle("active", b === btn);
+      });
+
+      // 最後に開いていたタブを覚えておく
+      localStorage.setItem("recPanel", id);
+
+      window.scrollTo({ top: 0 });
+    }
+
+    // ===== タブのバッジ（今日のメニューの種目数）=====
+    function updateRecTabBadge() {
+
+      const el = document.getElementById("recMenuBadge");
+      if (!el) return;
+
+      let n = 0;
+      try {
+        const menu = JSON.parse(localStorage.getItem("todayMenu") || "[]");
+        n = new Set(menu.map(it => it.name)).size;
+      } catch (e) { /* 壊れたデータは無視 */ }
+
+      el.textContent = n > 0 ? n : "";
+    }
+
+    // メニューが再描画されるたびにバッジも更新する
+    // （script.js 側は触らずに、ここで包んでいる）
+    const _renderMenu = renderMenu;
+    renderMenu = function () {
+      _renderMenu.apply(this, arguments);
+      updateRecTabBadge();
+    };
+
+    // script.js の window.onload が終わったあとに実行される
+    window.addEventListener("load", () => {
+
+      const saved = localStorage.getItem("recPanel");
+      const btn = document.querySelector('.rec-tab[data-panel="' + saved + '"]');
+      if (btn) switchRecPanel(btn);
+
+      updateRecTabBadge();
+    });
+  </script>
 
   <nav class="bottom-nav">
     <a href="index.html"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.2 12 4.5l8 6.7V20a1 1 0 0 1-1 1h-4.5v-5.5h-5V21H5a1 1 0 0 1-1-1z"/></svg></span>ホーム</a>
