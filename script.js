@@ -94,6 +94,79 @@ function updateSetDisplay() {
     `${doneSets} / ${totalSets} セット完了`;
 }
 
+// ===== タイマー：種目ごとのレスト時間 =====
+// 種目を選ぶと、その種目に保存したレスト時間を呼び出す。
+// レストを変えると、その種目に保存される（次回同じ種目で呼び出される）。
+
+// タイマーページの種目セレクトを、今日のメニューの種目で用意
+function initTimerExercisePicker() {
+  const select = document.getElementById("timerExercise");
+  if (!select) return;
+
+  const menu = JSON.parse(localStorage.getItem("todayMenu")) || [];
+  const names = [...new Set(menu.map(it => it.name))];
+
+  select.innerHTML = "";
+
+  const first = document.createElement("option");
+  first.value = "";
+  first.textContent = names.length ? "指定なし（共通で使う）" : "今日のメニューが空です";
+  select.appendChild(first);
+
+  names.forEach(n => {
+    const opt = document.createElement("option");
+    opt.value = n;
+    opt.textContent = n;
+    select.appendChild(opt);
+  });
+
+  onTimerExerciseChange();  // 初期表示のレストを反映
+}
+
+// 種目が変わったら、その種目に保存されたレスト時間を読み込む
+function onTimerExerciseChange() {
+  const select = document.getElementById("timerExercise");
+  if (!select) return;
+  const name = select.value;
+
+  const setEl = document.getElementById("setRest");
+  const exEl  = document.getElementById("exerciseRest");
+  const note  = document.getElementById("timerExerciseNote");
+
+  if (!name) {
+    if (note) note.textContent = "種目を選ぶと、その種目に保存したレスト時間が呼び出されます。";
+    return;
+  }
+
+  // 保存済みがあれば呼び出す。なければ初期値（60/120）に戻す。
+  const savedSet = localStorage.getItem(`timerSetRest_${name}`);
+  const savedEx  = localStorage.getItem(`timerExRest_${name}`);
+  if (setEl) setEl.value = (savedSet !== null) ? savedSet : "60";
+  if (exEl)  exEl.value  = (savedEx  !== null) ? savedEx  : "120";
+
+  if (note) {
+    note.textContent = (savedSet !== null || savedEx !== null)
+      ? `「${name}」に保存したレスト時間を呼び出しました。`
+      : `「${name}」のレスト時間を設定できます（変更すると保存されます）。`;
+  }
+}
+
+// レスト時間を、選択中の種目に保存する
+function saveTimerRest() {
+  const select = document.getElementById("timerExercise");
+  if (!select) return;
+  const name = select.value;
+  if (!name) return;   // 「指定なし」のときは保存しない
+
+  const setEl = document.getElementById("setRest");
+  const exEl  = document.getElementById("exerciseRest");
+  if (setEl) localStorage.setItem(`timerSetRest_${name}`, setEl.value);
+  if (exEl)  localStorage.setItem(`timerExRest_${name}`,  exEl.value);
+
+  const note = document.getElementById("timerExerciseNote");
+  if (note) note.textContent = `「${name}」のレスト時間を保存しました。`;
+}
+
 function startTimer(seconds, callback) {
 
   // レスト0秒ならすぐ完了扱い
@@ -585,18 +658,41 @@ function renderMenu() {
 
   list.innerHTML = "";
 
+  // todayMenu（1件=1セット）を、種目ごとにまとめる（初出順を保つ）
+  const groups = [];
+  const indexByName = {};
   todayMenu.forEach((item, i) => {
+    if (!(item.name in indexByName)) {
+      indexByName[item.name] = groups.length;
+      groups.push({ name: item.name, mets: item.mets, sets: [] });
+    }
+    groups[indexByName[item.name]].sets.push({ idx: i, reps: item.reps, weight: item.weight });
+  });
 
+  groups.forEach(g => {
     const li = document.createElement("li");
+    li.className = "menu-ex";
+
+    const rows = g.sets.map((s, n) => `
+      <div class="set-row">
+        <span class="set-no">${n + 1}セット目</span>
+        <input class="set-inp" type="number" inputmode="decimal" value="${s.reps}"
+          onchange="updateSet(${s.idx}, 'reps', this.value)">
+        <span class="set-unit">回</span>
+        <input class="set-inp" type="number" inputmode="decimal" value="${s.weight}"
+          onchange="updateSet(${s.idx}, 'weight', this.value)">
+        <span class="set-unit">kg</span>
+        <button class="set-del" onclick="deleteItem(${s.idx})" aria-label="このセットを削除">×</button>
+      </div>
+    `).join("");
 
     li.innerHTML = `
-      <div class="item-name">
-        ${item.name} - ${item.weight}kg × ${item.reps}回
+      <div class="menu-ex-head">
+        <span class="menu-ex-name">${g.name}</span>
+        <button class="set-add-btn" onclick="addSetToExercise('${g.name.replace(/'/g, "\\'")}')">＋セット追加</button>
       </div>
-      <div class="item-actions">
-        <button class="item-btn" onclick="duplicateItem(${i})">＋1セット</button>
-        <button class="item-btn del" onclick="deleteItem(${i})">削除</button>
-      </div>
+      ${rows}
+      <button class="menu-ex-del" onclick="deleteExerciseGroup('${g.name.replace(/'/g, "\\'")}')">この種目を削除</button>
     `;
 
     list.appendChild(li);
@@ -604,6 +700,37 @@ function renderMenu() {
 
   // メニューが変わるたびに当日の総ボリュームを更新（グラフの土台）
   updateDailyVolume();
+}
+
+// セットの回数・重さを編集
+function updateSet(idx, field, value) {
+  if (!todayMenu[idx]) return;
+  const v = parseFloat(value);
+  if (isNaN(v)) return;
+  todayMenu[idx][field] = v;
+  localStorage.setItem("todayMenu", JSON.stringify(todayMenu));
+  updateDailyVolume();
+}
+
+// その種目に1セット追加（最後のセットの回数・重さを引き継ぐ）
+function addSetToExercise(name) {
+  // その種目の最後の出現位置を探す
+  let lastIdx = -1;
+  todayMenu.forEach((it, i) => { if (it.name === name) lastIdx = i; });
+  if (lastIdx === -1) return;
+  const base = todayMenu[lastIdx];
+  todayMenu.splice(lastIdx + 1, 0, {
+    name: base.name, mets: base.mets, reps: base.reps, weight: base.weight
+  });
+  localStorage.setItem("todayMenu", JSON.stringify(todayMenu));
+  renderMenu();
+}
+
+// その種目のセットをすべて削除
+function deleteExerciseGroup(name) {
+  todayMenu = todayMenu.filter(it => it.name !== name);
+  localStorage.setItem("todayMenu", JSON.stringify(todayMenu));
+  renderMenu();
 }
 
 // 同じ内容のセットをすぐ下に複製（重量・回数を入れ直さずに1セット追加）
@@ -1332,6 +1459,9 @@ window.onload = () => {
   // ホームの週表示・レベル表示
   renderWeeklyStreak();
   renderLevel();
+
+  // タイマーの種目選択（メニューから）
+  initTimerExercisePicker();
 
   const select =
     document.getElementById("exerciseSelect");

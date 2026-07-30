@@ -130,6 +130,25 @@ button:disabled {
   font-weight: 600;
 }
 
+/* タイマーのボタン色分け（役割ごとに色を変える） */
+.btn-set-rest {                 /* セット完了→休憩：メインの緑 */
+  background: var(--accent);
+  color: #06281A;
+}
+.btn-ex-rest {                  /* 種目完了→休憩：ティール */
+  background: #18A7A0;
+  color: #052826;
+}
+.btn-stop {                     /* ストップ：赤 */
+  background: var(--danger);
+  color: #3a0d0d;
+}
+.btn-muted {                    /* 音を止める／音確認：控えめ */
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
 /* --- リスト --- */
 ul { padding-left: 0; margin: 8px 0; }
 li {

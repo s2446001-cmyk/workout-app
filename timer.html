@@ -22,6 +22,10 @@
 
   <div class="card">
 
+    <label>種目を選ぶ（メニューから）</label>
+    <select id="timerExercise" onchange="onTimerExerciseChange()"></select>
+    <p class="note" id="timerExerciseNote">種目を選ぶと、その種目に保存したレスト時間が呼び出されます。</p>
+
     <label>セット数</label>
     <div class="field-row">
       <button type="button" class="step-btn" onclick="stepField('totalSets', -1, 1)">−</button>
@@ -31,35 +35,35 @@
 
     <label>セット間レスト（秒）</label>
     <div class="field-row">
-      <button type="button" class="step-btn" onclick="stepField('setRest', -15, 0)">−</button>
-      <input id="setRest" type="number" inputmode="numeric" value="60">
-      <button type="button" class="step-btn" onclick="stepField('setRest', 15, 0)">＋</button>
+      <button type="button" class="step-btn" onclick="stepField('setRest', -15, 0); saveTimerRest()">−</button>
+      <input id="setRest" type="number" inputmode="numeric" value="60" onchange="saveTimerRest()">
+      <button type="button" class="step-btn" onclick="stepField('setRest', 15, 0); saveTimerRest()">＋</button>
     </div>
 
     <label>種目間レスト（秒）</label>
     <div class="field-row">
-      <button type="button" class="step-btn" onclick="stepField('exerciseRest', -15, 0)">−</button>
-      <input id="exerciseRest" type="number" inputmode="numeric" value="120">
-      <button type="button" class="step-btn" onclick="stepField('exerciseRest', 15, 0)">＋</button>
+      <button type="button" class="step-btn" onclick="stepField('exerciseRest', -15, 0); saveTimerRest()">−</button>
+      <input id="exerciseRest" type="number" inputmode="numeric" value="120" onchange="saveTimerRest()">
+      <button type="button" class="step-btn" onclick="stepField('exerciseRest', 15, 0); saveTimerRest()">＋</button>
     </div>
 
-    <button id="setRestBtn" onclick="startSetRest()">
+    <button id="setRestBtn" class="btn-set-rest" onclick="startSetRest()">
       セット完了 → 休憩
     </button>
 
-    <button id="exerciseRestBtn" onclick="startExerciseRest()">
+    <button id="exerciseRestBtn" class="btn-ex-rest" onclick="startExerciseRest()">
       種目完了 → 休憩
     </button>
 
-    <button onclick="stopTimer()">
+    <button class="btn-stop" onclick="stopTimer()">
       ストップ
     </button>
 
-    <button onclick="stopSound()">
+    <button class="btn-muted" onclick="stopSound()">
       音を止める
     </button>
 
-    <button onclick="playSound()">
+    <button class="btn-muted" onclick="playSound()">
       音確認
     </button>
 
