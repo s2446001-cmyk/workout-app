@@ -391,6 +391,107 @@ function updateExerciseSelect() {
   showPreviousWeight();
 }
 
+// 今週の総重量（総挙上量）と先週比を表示
+function renderWeeklyVolume() {
+  const box = document.getElementById("weeklyVolumeBox");
+  if (!box) return;
+
+  const stats = JSON.parse(localStorage.getItem("dailyStats")) || {};
+  const thisKey = weekKey(new Date());
+  const lastMon = weekStart(new Date());
+  lastMon.setDate(lastMon.getDate() - 7);
+  const lastKey = lastMon.toISOString().split("T")[0];
+
+  let thisWeek = 0, lastWeek = 0;
+  for (const date in stats) {
+    const v = stats[date].volume || 0;
+    const k = weekKey(date);
+    if (k === thisKey) thisWeek += v;
+    else if (k === lastKey) lastWeek += v;
+  }
+
+  const diff = thisWeek - lastWeek;
+  const fmt = n => Math.round(n).toLocaleString();
+
+  let compare;
+  if (lastWeek === 0) {
+    compare = thisWeek > 0 ? "今週から記録スタート！" : "記録するとここに積み上がります";
+  } else if (diff > 0) {
+    compare = `先週より +${fmt(diff)} kg`;
+  } else if (diff < 0) {
+    compare = `先週より ${fmt(diff)} kg（無理せていこう）`;
+  } else {
+    compare = "先週と同じペース";
+  }
+
+  box.innerHTML = `
+    <div class="stat-row">
+      <span class="stat-num-md">${fmt(thisWeek)}</span>
+      <span class="stat-den">kg（今週）</span>
+    </div>
+    <div class="stat-sub">総挙上量（重さ×回数の合計）</div>
+    <div class="streak ${diff > 0 ? "on" : ""}">${compare}</div>
+  `;
+}
+
+// 実績バッジの判定（すべて既存データから計算）
+function computeBadges() {
+  const trained = (JSON.parse(localStorage.getItem("trainedDays")) || []).length;
+  const streak = (typeof weeklyStreak === "function") ? weeklyStreak() : 0;
+  const level  = levelInfo(parseInt(localStorage.getItem("totalXP")) || 0).level;
+
+  // 累計総挙上量
+  const stats = JSON.parse(localStorage.getItem("dailyStats")) || {};
+  let totalVol = 0;
+  for (const d in stats) totalVol += stats[d].volume || 0;
+
+  // 自己ベスト更新をしたことがあるか（履歴内で最高値が最初の記録を上回る）
+  const hist = JSON.parse(localStorage.getItem("exerciseHistory")) || {};
+  let hadPR = false;
+  for (const n in hist) {
+    const rec = hist[n];
+    if (rec.length >= 2) {
+      const first = rec[0].weight;
+      const max = Math.max(...rec.map(r => r.weight));
+      if (max > first) { hadPR = true; break; }
+    }
+  }
+
+  return [
+    { label: "はじめの一歩", desc: "初めて記録した",        earned: trained >= 1 },
+    { label: "継続の芽",     desc: "通算5日トレした",       earned: trained >= 5 },
+    { label: "習慣化",       desc: "通算20日トレした",      earned: trained >= 20 },
+    { label: "鉄人",         desc: "通算50日トレした",      earned: trained >= 50 },
+    { label: "自己ベスト",   desc: "自己ベストを更新した",   earned: hadPR },
+    { label: "連続の力",     desc: "2週連続でトレした",     earned: streak >= 2 },
+    { label: "継続マスター", desc: "4週連続でトレした",     earned: streak >= 4 },
+    { label: "1トンクラブ",  desc: "累計1,000kg挙げた",     earned: totalVol >= 1000 },
+    { label: "10トンクラブ", desc: "累計10,000kg挙げた",    earned: totalVol >= 10000 },
+    { label: "Lv.5到達",     desc: "レベル5になった",       earned: level >= 5 },
+    { label: "Lv.10到達",    desc: "レベル10になった",      earned: level >= 10 },
+  ];
+}
+
+// 実績バッジを表示
+function renderBadges() {
+  const box = document.getElementById("badgeBox");
+  if (!box) return;
+
+  const badges = computeBadges();
+  const earnedCount = badges.filter(b => b.earned).length;
+
+  box.innerHTML = badges.map(b => `
+    <div class="badge ${b.earned ? "earned" : "locked"}" title="${b.desc}">
+      <div class="badge-mark">${b.earned ? "✓" : "&nbsp;"}</div>
+      <div class="badge-label">${b.label}</div>
+      <div class="badge-desc">${b.desc}</div>
+    </div>
+  `).join("");
+
+  const head = box.previousElementSibling; // <h2>実績</h2>
+  if (head && head.tagName === "H2") head.textContent = `実績（${earnedCount} / ${badges.length}）`;
+}
+
 // ホームのバックアップ案内：未実施 or 30日以上経過で表示
 function renderBackupReminder() {
   const box = document.getElementById("backupReminder");
@@ -1464,19 +1565,34 @@ function drawWeightChart() {
   const labels = records.map(r => shortDate(r.date));
   const data = records.map(r => r.weight);
 
+  // 自己ベスト（その日までの最高重量）＝ 下がらない線。上下しても「最高は伸びている」が見える
+  let best = -Infinity;
+  const bestLine = records.map(r => { best = Math.max(best, r.weight); return best; });
+
   if (weightChartObj) weightChartObj.destroy();
 
   weightChartObj = new Chart(canvas, {
     type: "line",
     data: {
       labels,
-      datasets: [{
-        label: name ? `${name} の重量(kg)` : "重量(kg)",
-        data,
-        borderColor: "#2CE080",
-        backgroundColor: "rgba(44,224,128,0.25)",
-        tension: 0.2
-      }]
+      datasets: [
+        {
+          label: name ? `${name} の重量(kg)` : "重量(kg)",
+          data,
+          borderColor: "#2CE080",
+          backgroundColor: "rgba(44,224,128,0.25)",
+          tension: 0.2
+        },
+        {
+          label: "自己ベスト",
+          data: bestLine,
+          borderColor: "#F5B04D",
+          backgroundColor: "transparent",
+          borderDash: [6, 4],
+          pointRadius: 0,
+          tension: 0
+        }
+      ]
     },
     options: {
       plugins: {
@@ -1592,6 +1708,8 @@ window.onload = () => {
   // ホームの週表示・レベル表示
   renderWeeklyStreak();
   renderLevel();
+  renderWeeklyVolume();
+  renderBadges();
 
   // タイマーの種目選択（メニューから）
   initTimerExercisePicker();
