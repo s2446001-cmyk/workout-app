@@ -133,16 +133,23 @@ function onTimerExerciseChange() {
   const exEl  = document.getElementById("exerciseRest");
   const note  = document.getElementById("timerExerciseNote");
 
+  // 設定のデフォルト（未設定なら60/120）
+  const defSet = getSetting("defaultSetRest", 60);
+  const defEx  = getSetting("defaultExRest", 120);
+
   if (!name) {
+    // 「指定なし」ならデフォルトを表示
+    if (setEl) setEl.value = defSet;
+    if (exEl)  exEl.value  = defEx;
     if (note) note.textContent = "種目を選ぶと、その種目に保存したレスト時間が呼び出されます。";
     return;
   }
 
-  // 保存済みがあれば呼び出す。なければ初期値（60/120）に戻す。
+  // 保存済みがあれば呼び出す。なければデフォルトに戻す。
   const savedSet = localStorage.getItem(`timerSetRest_${name}`);
   const savedEx  = localStorage.getItem(`timerExRest_${name}`);
-  if (setEl) setEl.value = (savedSet !== null) ? savedSet : "60";
-  if (exEl)  exEl.value  = (savedEx  !== null) ? savedEx  : "120";
+  if (setEl) setEl.value = (savedSet !== null) ? savedSet : defSet;
+  if (exEl)  exEl.value  = (savedEx  !== null) ? savedEx  : defEx;
 
   if (note) {
     note.textContent = (savedSet !== null || savedEx !== null)
@@ -230,14 +237,95 @@ function setTimerButtons(disabled) {
   });
 }
 
-// 終了時：ピピ音＋スマホ振動
+// 終了時：ピピ音＋スマホ振動（設定に従う）
 function finishBeep() {
 
-  playSound();
+  if (getSetting("soundOn", true)) {
+    playSound();
+  }
 
-  if (navigator.vibrate) {
+  if (getSetting("vibrateOn", true) && navigator.vibrate) {
     navigator.vibrate([200, 100, 200]);
   }
+}
+
+// ===== 設定の読み書き（その他タブ） =====
+// 音量・音ON/OFF・振動・デフォルトレストなどを localStorage に保存する
+function getSetting(key, fallback) {
+  const v = localStorage.getItem(`setting_${key}`);
+  if (v === null) return fallback;
+  if (v === "true") return true;
+  if (v === "false") return false;
+  const n = parseFloat(v);
+  return isNaN(n) ? v : n;
+}
+
+function setSetting(key, value) {
+  localStorage.setItem(`setting_${key}`, String(value));
+}
+
+// ===== その他・設定ページ =====
+function renderSettings() {
+  const vol = document.getElementById("setVolume");
+  if (!vol) return;   // 設定ページでなければ何もしない
+
+  const v = getSetting("volume", 50);
+  vol.value = v;
+  const lab = document.getElementById("volumeLabel");
+  if (lab) lab.textContent = `${v}%`;
+
+  const s = document.getElementById("setSoundOn");
+  if (s) s.checked = getSetting("soundOn", true);
+
+  const vib = document.getElementById("setVibrateOn");
+  if (vib) vib.checked = getSetting("vibrateOn", true);
+
+  const dsr = document.getElementById("setDefaultSetRest");
+  if (dsr) dsr.value = getSetting("defaultSetRest", 60);
+
+  const der = document.getElementById("setDefaultExRest");
+  if (der) der.value = getSetting("defaultExRest", 120);
+
+  renderBadges();
+  renderBackupReminder();
+}
+
+function onVolumeInput() {
+  const vol = document.getElementById("setVolume");
+  const lab = document.getElementById("volumeLabel");
+  if (!vol) return;
+  setSetting("volume", parseInt(vol.value));
+  if (lab) lab.textContent = `${vol.value}%`;
+}
+
+function onToggle(key, el) {
+  setSetting(key, el.checked);
+}
+
+function onNumberSetting(key, el) {
+  const n = parseInt(el.value);
+  if (!isNaN(n)) setSetting(key, n);
+}
+
+// 設定用ステッパー（±ボタン）
+function stepSetting(key, inputId, delta, min) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  let v = parseInt(el.value);
+  if (isNaN(v)) v = 0;
+  v += delta;
+  if (typeof min === "number" && v < min) v = min;
+  el.value = v;
+  setSetting(key, v);
+}
+
+// すべてのデータを消去
+function resetAllData() {
+  if (!confirm("記録・種目・設定をすべて消します。取り消せません。本当によろしいですか？")) return;
+  if (!confirm("最終確認です。すべてのデータを削除しますか？")) return;
+  localStorage.clear();
+  alert("すべてのデータを消去しました。");
+  location.href = "index.html";
 }
 
 // ===== 画面スリープ防止（Wake Lock） =====
@@ -287,8 +375,12 @@ function playSound() {
       ctx.currentTime + time
     );
 
+    // 音量は設定から（0〜100% を 0〜0.4 のゲインに対応）
+    const vol = getSetting("volume", 50);
+    const gainValue = Math.max(0, Math.min(100, vol)) / 100 * 0.4;
+
     gain.gain.setValueAtTime(
-      0.2,
+      gainValue,
       ctx.currentTime + time
     );
 
@@ -1716,6 +1808,9 @@ window.onload = () => {
 
   // バックアップの案内（ホーム）
   renderBackupReminder();
+
+  // その他・設定ページ
+  renderSettings();
 
   const select =
     document.getElementById("exerciseSelect");

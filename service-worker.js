@@ -1,12 +1,13 @@
 // ===== PWA Service Worker =====
 // バージョンを上げる（v1 → v2 …）と、古いキャッシュを捨てて作り直します。
 // ファイルを更新しても反映されないときは、ここの番号を上げてください。
-const CACHE = "kintore-v16";
+const CACHE = "kintore-v17";
 
 // オフライン用に最初にキャッシュしておくファイル
 const ASSETS = [
   "./",
   "index.html",
+  "settings.html",
   "timer.html",
   "exercise.html",
   "record.html",
