@@ -181,11 +181,13 @@ function startTimer(seconds, callback) {
 
   let time = seconds;
   document.getElementById("timer").innerText = time;
+  setTimerRing(100);
 
   timerInterval = setInterval(() => {
 
     time--;
     document.getElementById("timer").innerText = time;
+    setTimerRing(Math.max(0, (time / seconds) * 100));
 
     if (time <= 0) {
 
@@ -193,10 +195,17 @@ function startTimer(seconds, callback) {
       isResting = false;
       releaseWakeLock();
       setTimerButtons(false);
+      setTimerRing(0);
       callback();
     }
 
   }, 1000);
+}
+
+// プログレスリングの割合（0〜100）を反映
+function setTimerRing(pct) {
+  const ring = document.getElementById("timerRing");
+  if (ring) ring.style.setProperty("--p", pct);
 }
 
 // レスト途中で止める
@@ -209,6 +218,7 @@ function stopTimer() {
 
   const t = document.getElementById("timer");
   if (t) t.innerText = "停止しました";
+  setTimerRing(0);
 }
 
 // レスト中はレスト開始ボタンを無効化
@@ -334,6 +344,16 @@ function seedExercisesFromAI() {
   return added;
 }
 
+// 記録ページの種目セレクトの絞り込み状態
+let recPartFilter = "all";
+
+function setRecPart(btn) {
+  recPartFilter = btn.dataset.part;
+  document.querySelectorAll("#recPartTabs .filter-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  updateExerciseSelect();
+}
+
 function updateExerciseSelect() {
 
   const select =
@@ -341,21 +361,61 @@ function updateExerciseSelect() {
 
   if (!select) return;
 
+  const searchEl = document.getElementById("recSearch");
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : "";
+
   select.innerHTML = "";
+
+  let shown = 0;
 
   exercises.forEach((ex, i) => {
 
+    const part = ex.part || "その他";
+    if (recPartFilter !== "all" && part !== recPartFilter) return;
+    if (q && !ex.name.toLowerCase().includes(q)) return;
+
     const opt = document.createElement("option");
-
     opt.value = i;
-
-    opt.textContent =
-      `${ex.name} (METs:${ex.mets})`;
-
+    opt.textContent = `${ex.name} (METs:${ex.mets})`;
     select.appendChild(opt);
+    shown++;
   });
 
+  if (shown === 0) {
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "該当する種目がありません";
+    select.appendChild(opt);
+  }
+
   showPreviousWeight();
+}
+
+// ホームのバックアップ案内：未実施 or 30日以上経過で表示
+function renderBackupReminder() {
+  const box = document.getElementById("backupReminder");
+  if (!box) return;
+
+  // 記録データがまだ無いなら案内しない
+  const hasData = (JSON.parse(localStorage.getItem("exerciseHistory")) || null)
+    || (JSON.parse(localStorage.getItem("todayMenu")) || []).length > 0;
+  if (!hasData) { box.style.display = "none"; return; }
+
+  const last = localStorage.getItem("lastBackup");
+  let show = false, msg = "";
+  if (!last) {
+    show = true;
+    msg = "まだバックアップしていません。念のため保存しておくと安心です。";
+  } else {
+    const days = Math.floor((new Date(todayStr()) - new Date(last)) / 86400000);
+    if (days >= 30) {
+      show = true;
+      msg = `前回のバックアップから${days}日たっています。保存をおすすめします。`;
+    }
+  }
+
+  box.style.display = show ? "block" : "none";
+  box.textContent = msg;
 }
 
 // ===== 種目管理（追加・編集・削除・一覧） =====
@@ -718,6 +778,16 @@ function renderMenu() {
 
   list.innerHTML = "";
 
+  // 空のときの案内
+  if (todayMenu.length === 0) {
+    const li = document.createElement("li");
+    li.className = "ex-empty";
+    li.textContent = "まだ種目がありません。AI提案か、下の「記録」から追加できます。";
+    list.appendChild(li);
+    updateDailyVolume();
+    return;
+  }
+
   // todayMenu（1件=1セット）を、種目ごとにまとめる（初出順を保つ）
   const groups = [];
   const indexByName = {};
@@ -788,6 +858,7 @@ function addSetToExercise(name) {
 
 // その種目のセットをすべて削除
 function deleteExerciseGroup(name) {
+  if (!confirm(`「${name}」を今日のメニューから削除しますか？`)) return;
   todayMenu = todayMenu.filter(it => it.name !== name);
   localStorage.setItem("todayMenu", JSON.stringify(todayMenu));
   renderMenu();
@@ -1525,6 +1596,9 @@ window.onload = () => {
   // タイマーの種目選択（メニューから）
   initTimerExercisePicker();
 
+  // バックアップの案内（ホーム）
+  renderBackupReminder();
+
   const select =
     document.getElementById("exerciseSelect");
 
@@ -1562,6 +1636,10 @@ function exportData() {
   a.href = url;
   a.download = `workout-backup-${todayStr()}.json`;
   a.click();
+
+  // バックアップした日時を記録（ホームの案内表示に使う）
+  localStorage.setItem("lastBackup", todayStr());
+  renderBackupReminder();
 
   URL.revokeObjectURL(url);
 }

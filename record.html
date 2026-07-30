@@ -308,25 +308,27 @@
   <!-- 前回・保存メニュー -->
   <div class="card">
 
-    <h2>前回・保存メニュー</h2>
+    <details>
+      <summary>前回のトレ・保存メニュー</summary>
 
-    <button onclick="loadLastSession()">
-      ↻ 前回のトレを読み込む
-    </button>
+      <button onclick="loadLastSession()">
+        ↻ 前回のトレを読み込む
+      </button>
 
-    <button class="sub-btn" onclick="saveLastSession()">
-      今日のトレを「前回」として記憶
-    </button>
+      <button class="sub-btn" onclick="saveLastSession()">
+        今日のトレを「前回」として記憶
+      </button>
 
-    <div class="ai-divider"></div>
+      <div class="ai-divider"></div>
 
-    <input id="menuName" placeholder="メニュー名（例：胸の日）">
+      <input id="menuName" placeholder="メニュー名（例：胸の日）">
 
-    <button onclick="saveRoutine()">
-      今日のメニューに名前を付けて保存
-    </button>
+      <button onclick="saveRoutine()">
+        今日のメニューに名前を付けて保存
+      </button>
 
-    <div id="routineButtons"></div>
+      <div id="routineButtons"></div>
+    </details>
 
   </div>
 
@@ -334,6 +336,21 @@
   <div class="card">
 
     <label>種目</label>
+
+    <input id="recSearch" type="search" placeholder="種目名で検索" oninput="updateExerciseSelect()">
+
+    <div id="recPartTabs" class="filter-tabs">
+      <button type="button" class="filter-tab active" data-part="all" onclick="setRecPart(this)">すべて</button>
+      <button type="button" class="filter-tab" data-part="胸" onclick="setRecPart(this)">胸</button>
+      <button type="button" class="filter-tab" data-part="背中" onclick="setRecPart(this)">背中</button>
+      <button type="button" class="filter-tab" data-part="肩" onclick="setRecPart(this)">肩</button>
+      <button type="button" class="filter-tab" data-part="脚" onclick="setRecPart(this)">脚</button>
+      <button type="button" class="filter-tab" data-part="腕" onclick="setRecPart(this)">腕</button>
+      <button type="button" class="filter-tab" data-part="腹筋" onclick="setRecPart(this)">腹筋</button>
+      <button type="button" class="filter-tab" data-part="有酸素" onclick="setRecPart(this)">有酸素</button>
+      <button type="button" class="filter-tab" data-part="その他" onclick="setRecPart(this)">その他</button>
+    </div>
+
     <select id="exerciseSelect"></select>
 
     <details class="ai-card" style="margin-top:6px;">
