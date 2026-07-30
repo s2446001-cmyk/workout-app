@@ -62,6 +62,22 @@
 
     <h2>登録済みの種目</h2>
 
+    <input id="exSearch" type="search" placeholder="種目名で検索" oninput="renderExerciseList()">
+
+    <div id="exPartTabs" class="filter-tabs">
+      <button type="button" class="filter-tab active" data-part="all" onclick="setExPart(this)">すべて</button>
+      <button type="button" class="filter-tab" data-part="胸" onclick="setExPart(this)">胸</button>
+      <button type="button" class="filter-tab" data-part="背中" onclick="setExPart(this)">背中</button>
+      <button type="button" class="filter-tab" data-part="肩" onclick="setExPart(this)">肩</button>
+      <button type="button" class="filter-tab" data-part="脚" onclick="setExPart(this)">脚</button>
+      <button type="button" class="filter-tab" data-part="腕" onclick="setExPart(this)">腕</button>
+      <button type="button" class="filter-tab" data-part="腹筋" onclick="setExPart(this)">腹筋</button>
+      <button type="button" class="filter-tab" data-part="有酸素" onclick="setExPart(this)">有酸素</button>
+      <button type="button" class="filter-tab" data-part="その他" onclick="setExPart(this)">その他</button>
+    </div>
+
+    <p class="note" id="exCount"></p>
+
     <ul id="exerciseList"></ul>
 
   </div>

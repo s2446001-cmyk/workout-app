@@ -426,7 +426,18 @@ function addExercise() {
   updateExerciseSelect();   // 記録ページのドロップダウンも更新
 }
 
-// 登録済み種目の一覧表示
+// 種目管理の絞り込み状態（部位）
+let exPartFilter = "all";
+
+// 部位タブを切り替え
+function setExPart(btn) {
+  exPartFilter = btn.dataset.part;
+  document.querySelectorAll("#exPartTabs .filter-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  renderExerciseList();
+}
+
+// 登録済み種目の一覧表示（部位タブ＋名前検索で絞り込み）
 function renderExerciseList() {
 
   const list =
@@ -436,9 +447,21 @@ function renderExerciseList() {
 
   list.innerHTML = "";
 
+  const searchEl = document.getElementById("exSearch");
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : "";
+
+  let shown = 0;
+
   exercises.forEach((ex, i) => {
 
-    const part = ex.part || "部位未設定";
+    const part = ex.part || "その他";
+
+    // 部位フィルタ
+    if (exPartFilter !== "all" && part !== exPartFilter) return;
+    // 名前検索
+    if (q && !ex.name.toLowerCase().includes(q)) return;
+
+    shown++;
 
     const li = document.createElement("li");
 
@@ -454,6 +477,18 @@ function renderExerciseList() {
 
     list.appendChild(li);
   });
+
+  // 件数表示
+  const countEl = document.getElementById("exCount");
+  if (countEl) countEl.textContent = `${shown} 種目`;
+
+  // 該当なしのとき
+  if (shown === 0) {
+    const li = document.createElement("li");
+    li.className = "ex-empty";
+    li.textContent = "該当する種目がありません";
+    list.appendChild(li);
+  }
 }
 
 // 種目を編集（フォームに値を入れて更新モードへ）
